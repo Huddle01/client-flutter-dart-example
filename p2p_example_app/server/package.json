@@ -1,0 +1,12 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@huddle01/server-sdk": "^2.1.0",
+    "http": "^0.0.1-security"
+  }
+}
