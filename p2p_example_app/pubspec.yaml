@@ -1,10 +1,10 @@
 name: p2p_example_app
-description: "A new Flutter project."
-publish_to: 'none'
+description: "a basic p2p example app using Huddle01 Flutter SDK"
+publish_to: "none"
 version: 0.1.0
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: ">=3.3.0 <4.0.0"
 
 dependencies:
   flutter:
