@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:huddle01_flutter_client/huddle_client.dart';
 import 'package:p2p_example_app/screens/home_screen.dart';
@@ -16,9 +18,22 @@ class _MeetingScreenState extends State<MeetingScreen> {
 
   RTCVideoRenderer? localVideoRenderer;
 
+  List<MediaDeviceInfo>? audioInput;
+  List<MediaDeviceInfo>? audioOutput;
+  @override
+  void initState() {
+    super.initState();
+    peersNotifier.addListener(_updatePeers);
+  }
+
+  void _updatePeers() {
+    setState(() {});
+  }
+
   @override
   void dispose() {
     localVideoRenderer?.dispose();
+    peersNotifier.removeListener(_updatePeers);
     peersNotifier.dispose();
     super.dispose();
   }
@@ -31,7 +46,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
         backgroundColor: Theme.of(context).colorScheme.background,
         appBar: AppBar(
           centerTitle: true,
-          title: const Text("p2p call app"),
+          title: const Text("one-2-one call app 📞"),
         ),
         body: ValueListenableBuilder(
           valueListenable: peersNotifier,
@@ -61,21 +76,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                             : const Center(
                                 child: Text("no peers 🥲"),
                               ),
-                    Positioned(
-                      right: 20,
-                      bottom: 20,
-                      child: SizedBox(
-                        height: 150,
-                        width: 120,
-                        child: localVideoRenderer != null
-                            ? RTCVideoView(
-                                localVideoRenderer!,
-                                objectFit: RTCVideoViewObjectFit
-                                    .RTCVideoViewObjectFitCover,
-                              )
-                            : Container(),
-                      ),
-                    )
+                    _localVideoView()
                   ]),
                 ),
                 Padding(
@@ -83,16 +84,22 @@ class _MeetingScreenState extends State<MeetingScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      IconButton(
-                        icon: Icon(isAudioOn ? Icons.mic : Icons.mic_off),
-                        onPressed: _toggleMic,
+                      GestureDetector(
+                        onLongPress: () => _onMicBtnLongPressed(context),
+                        child: IconButton(
+                          icon: Icon(isAudioOn ? Icons.mic : Icons.mic_off),
+                          onPressed: _toggleMic,
+                        ),
                       ),
                       IconButton(
                           icon: Icon(
                               isVideoOn ? Icons.videocam : Icons.videocam_off),
                           onPressed: _toggleCam),
                       IconButton(
-                        icon: const Icon(Icons.call_end),
+                        icon: const Icon(
+                          Icons.call_end,
+                          color: Colors.red,
+                        ),
                         iconSize: 30,
                         onPressed: () {
                           widget.huddleClient.leaveRoom();
@@ -109,6 +116,23 @@ class _MeetingScreenState extends State<MeetingScreen> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _localVideoView() {
+    return Positioned(
+      right: 20,
+      bottom: 20,
+      child: SizedBox(
+        height: 150,
+        width: 120,
+        child: localVideoRenderer != null
+            ? RTCVideoView(
+                localVideoRenderer!,
+                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+              )
+            : Container(),
       ),
     );
   }
@@ -133,5 +157,61 @@ class _MeetingScreenState extends State<MeetingScreen> {
     setState(() {
       isVideoOn = !isVideoOn;
     });
+  }
+
+  void _onMicBtnLongPressed(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text("change audio options"),
+        content: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            ElevatedButton(
+              child: const Text(
+                'CHANGE OUTPUT AUDIO DEVICE',
+              ),
+              onPressed: () async {
+                audioOutput = await widget.huddleClient.localPeer.deviceHandler
+                    .getAudioOutputDevices();
+                if (!mounted) return;
+                Navigator.pop(context);
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text("Select output Audio Device"),
+                    content: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        SingleChildScrollView(
+                          reverse: true,
+                          child: Column(
+                            children: audioOutput!
+                                .map(
+                                  (e) => ElevatedButton(
+                                    child: Text(e.label),
+                                    onPressed: () => {
+                                      widget
+                                          .huddleClient.localPeer.deviceHandler
+                                          .switchAudioDevice(e),
+                                      Navigator.pop(context)
+                                    },
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
