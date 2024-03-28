@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:huddle01_flutter_client/huddle_client.dart';
 import 'package:p2p_example_app/screens/meeting_screen.dart';
 
+import '../utils/common.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -23,15 +25,13 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
           child: Center(
         child: ElevatedButton(
-          onPressed: () {
-            huddleClient.joinRoom(roomId, token);
+          onPressed: () async {
+            await huddleClient.joinRoom(roomId, token);
             if (roomId.isNotEmpty && token.isNotEmpty) {
-              Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => MeetingScreen(
-                            huddleClient: huddleClient,
-                          )));
+              screenReplacementTimer(context, 0,
+                  screen: MeetingScreen(
+                    huddleClient: huddleClient,
+                  ));
             }
           },
           child: const Text("Join Room"),
