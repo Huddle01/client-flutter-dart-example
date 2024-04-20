@@ -148,8 +148,10 @@ class _MeetingScreenState extends State<MeetingScreen> {
 
   void _toggleCam() async {
     if (!isVideoOn) {
-      await widget.huddleClient.localPeer.enableVideo().then((value) =>
-          localVideoRenderer = widget.huddleClient.localPeer.videoRenderer);
+      await widget.huddleClient.localPeer.enableVideo().then(
+            (value) => localVideoRenderer =
+                widget.huddleClient.localPeer.deviceHandler.videoRenderer,
+          );
     } else {
       widget.huddleClient.localPeer.disableVideo();
       localVideoRenderer = null;
